@@ -1,0 +1,54 @@
+# Rider
+.idea/
+*.sln.iml
+
+# Build results
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider logs and caches
+.idea/.idea.IC/
+.idea/.idea.Rider/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/gradle.xml
+
+# VS Code
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.tmp
+*.old
+*~
+
+# NuGet
+*.nupkg
+packages/
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+*.VisualState.xml
+
+# Publish
+publish/

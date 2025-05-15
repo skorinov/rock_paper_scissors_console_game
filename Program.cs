@@ -5,70 +5,97 @@ namespace Rock_Paper_Scissors_Console_Game
 {
     internal class Program
     {
+        // Enum for Yes/No fight prompt
         private enum FightOptionsEnum: byte
         {
             No,
             Yes
         }
         
+        // Player enum
+        enum Player
+        {
+            User,
+            AI,
+        }
+        // Enum for available weapons
         private enum Weapons: byte
         {
             Rock, 
             Paper, 
             Scissors
         }
+        // Enum for possible outcomes of a round/battle
+        enum BattleOutcome
+        {
+            Victory,
+            Defeat,
+            Draw
+        }
         
+        // Arrays to store enum values for menu navigation
         private static readonly FightOptionsEnum[] _fightOptions = { FightOptionsEnum.Yes, FightOptionsEnum.No };
         private static readonly Weapons[] _weaponOptions = { Weapons.Rock, Weapons.Paper, Weapons.Scissors };
+        
+        /*
+         * Main entry point of the application
+         */
         private static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.Title = "Rock-Paper-Scissors Arena";
-            
+
+            // Prompt for user nickname and age
             string nickname = AskNickname();
             byte age = AskAge();
 
+            // Initialize statistics for the session (not persisted)
             byte totalRounds = 0;
             byte totalWins = 0;
             
+            // Main game loop: repeat until user chooses to exit
             while (true)
             {
                 Console.Clear();
-                ShowStats(nickname, age, totalRounds, totalWins);
-                
-                Console.WriteLine("Are you ready to fight? Use arrow keys to choose.\n");
+
+                WithColor(ConsoleColor.DarkCyan, () =>
+                {
+                    Console.WriteLine("Welcome to the Rock-Paper-Scissors Arena!\n");
+                    // Show user statistics for current session
+                    ShowStats(nickname, age, totalRounds, totalWins);
+                    Console.WriteLine($"Are you ready to {(totalRounds > 0 ? "next" : "")} fight? Use arrow keys to choose.\n");
+                });
                 int readyIndex = ShowMenu(string.Empty, new[] { FightOptionsEnum.Yes.ToString(), FightOptionsEnum.No.ToString() });
 
                 if (_fightOptions[readyIndex] == FightOptionsEnum.No)
                 {
+                    // Exit the game
                     SayGoodbye(nickname);
                     break;
                 }
                 
+                // Start a battle and update statistics
                 bool won = StartBattle(nickname);
                 totalRounds++;
                 if (won) totalWins++;
             }
         }
         
-        private static void ShowError(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\n+----------------------- ERROR -----------------------+");
-            Console.WriteLine($"| {message.PadRight(49)} |");
-            Console.WriteLine("+-----------------------------------------------------+");
-            Console.ResetColor();
-        }
-        
+        /*
+         * Ask player for nickname (non-empty input)
+         */
         private static string AskNickname()
         {
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("+-----------------------------+");
-                Console.WriteLine("|      Nickname Required      |");
-                Console.WriteLine("+-----------------------------+");
-                Console.Write("Enter your nickname: ");
+                WithColor(ConsoleColor.DarkCyan, () =>
+                {
+                    Console.WriteLine("+-----------------------------+");
+                    Console.WriteLine("|      Nickname Required      |");
+                    Console.WriteLine("+-----------------------------+");
+                    Console.Write("Enter your nickname: ");
+                });
 
                 string nickname = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(nickname))
@@ -82,15 +109,21 @@ namespace Rock_Paper_Scissors_Console_Game
             }
         }
 
+        /*
+         * Ask player for age (must be a valid number >= 12)
+         */
         private static byte AskAge()
         {
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("+-------------------------------+");
-                Console.WriteLine("|    Age Verification Required  |");
-                Console.WriteLine("+-------------------------------+");
-                Console.Write("Enter your age: ");
+                WithColor(ConsoleColor.DarkCyan, () =>
+                {
+                    Console.WriteLine("+-------------------------------+");
+                    Console.WriteLine("|    Age Verification Required  |");
+                    Console.WriteLine("+-------------------------------+");
+                    Console.Write("Enter your age: ");
+                });
 
                 bool isValidNumber = byte.TryParse(Console.ReadLine(), out byte age);
 
@@ -105,82 +138,9 @@ namespace Rock_Paper_Scissors_Console_Game
             }
         }
         
-        private static void ShowStats(string nickname, int age, int rounds, int wins)
-        {
-            Console.Clear();
-            Console.WriteLine("+==============================+");
-            Console.WriteLine("|         STATISTICS           |");
-            Console.WriteLine("+==============================+");
-            Console.WriteLine($"| Nickname: {nickname}");
-            Console.WriteLine($"| Age:      {age}");
-            Console.WriteLine($"| Battles:  {rounds}");
-            Console.WriteLine($"| Wins:     {wins}");
-            Console.WriteLine("+==============================+\n");
-        }
-        
-        private static int ShowMenu(string prompt, string[] options)
-        {
-            int selected = 0;
-            ConsoleKey key;
-            
-            int cursorTop = Console.CursorTop;
-
-            if (!string.IsNullOrWhiteSpace(prompt))
-            {
-                Console.WriteLine($"{prompt}");
-                cursorTop = Console.CursorTop;
-            }
-
-            do
-            {
-                Console.SetCursorPosition(0, cursorTop);
-
-                for (int i = 0; i < options.Length; i++)
-                {
-                    Console.ForegroundColor = (i == selected) ? ConsoleColor.Green : ConsoleColor.Gray;
-                    Console.WriteLine($"{(i == selected ? "> " : "  ")}{options[i]}".PadRight(Console.WindowWidth - 1));
-                }
-                Console.ResetColor();
-                
-                Console.SetCursorPosition(0, cursorTop);
-
-                key = Console.ReadKey(true).Key;
-
-                if (key == ConsoleKey.UpArrow)
-                {
-                    selected = (selected == 0) ? options.Length - 1 : selected - 1;
-                } else if (key == ConsoleKey.DownArrow)
-                {
-                    selected = (selected + 1) % options.Length;
-                }
-
-            } while (key != ConsoleKey.Enter);
-
-            Console.SetCursorPosition(0, cursorTop + options.Length);
-            return selected;
-        }
-        
-        private static void SayGoodbye(string nickname)
-        {
-            Console.Clear();
-            string[] messages = {
-                $"Take care, {nickname}! See you next time!",
-                $"Goodbye, {nickname}! Come back stronger!",
-                $"Thanks for playing, {nickname}! Until next battle!"
-            };
-
-            Random rand = new Random();
-            string message = messages[rand.Next(messages.Length)];
-
-            string border = new string('=', message.Length + 4);
-
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"\n{border}");
-            Console.WriteLine($"= {message} =");
-            Console.WriteLine($"{border}\n");
-            Console.ResetColor();
-        }
-        
+        /*
+         * Start a battle of three rounds against AI; returns true if player wins the battle
+         */
         private static bool StartBattle(string nickname)
         {
             int userWins = 0, aiWins = 0;
@@ -190,48 +150,54 @@ namespace Rock_Paper_Scissors_Console_Game
             for (int round = 1; round <= 3; round++)
             {
                 Console.Clear();
-                Console.ForegroundColor = ConsoleColor.DarkCyan;
-                Console.WriteLine("+----------------------+|      ROUND {0} START      |+----------------------+", round);
-                Console.ResetColor();
+                WithColor(ConsoleColor.DarkCyan, () =>
+                    Console.WriteLine($"+----------------------+|      ROUND {round} START      |+----------------------+")
+                );
 
-                int selectedIndex = ShowMenu("Choose your weapon:", new[] { Weapons.Rock.ToString(), Weapons.Paper.ToString(), Weapons.Scissors.ToString() });
+                int selectedIndex = ShowMenu("Choose your weapon (use arrow keys to choose):", new[] { Weapons.Rock.ToString(), Weapons.Paper.ToString(), Weapons.Scissors.ToString() });
                 Weapons userChoice = _weaponOptions[selectedIndex];
                 Weapons aiChoice = _weaponOptions[rand.Next(_weaponOptions.Length)];
 
-                PrintWeapon("You", userChoice);
-                PrintWeapon("AI", aiChoice);
+                // Display chosen weapons with ASCII art
+                PrintWeapon(Player.User, userChoice);
+                PrintWeapon(Player.AI, aiChoice);
 
-                string result = GetRoundWinner(userChoice, aiChoice);
-                string resultText = result == "user" ? "You win" : result == "ai" ? "AI wins" : "Draw";
+                // Determine outcome of the round
+                BattleOutcome result = GetRoundWinner(userChoice, aiChoice);
+                string resultText = result == BattleOutcome.Victory ? "You win" : result == BattleOutcome.Defeat ? "AI wins" : "Draw";
                 battleLog.Add($"Round {round}: You → {userChoice.ToString().ToUpper()}, AI → {aiChoice.ToString().ToUpper()} → {resultText}");
 
-                if (result == "user") userWins++;
-                else if (result == "ai") aiWins++;
+                if (result == BattleOutcome.Victory) userWins++;
+                else if (result == BattleOutcome.Defeat) aiWins++;
                 
                 Console.WriteLine($"\nPress any key to proceed to {(round == 3 ? "show result" : "next round")}...");
                 Console.ReadKey(true);
             }
             Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("╔═══════════════════════════════════════════════╗");
-            Console.WriteLine("║                 BATTLE RESULT                 ║");
-            Console.WriteLine("╚═══════════════════════════════════════════════╝");
-            Console.ResetColor();
-
-            foreach (var log in battleLog)
+            WithColor(ConsoleColor.DarkCyan, () =>
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"→ {log}");
-            }
-            Console.ResetColor();
+                Console.WriteLine("╔═══════════════════════════════════════════════╗");
+                Console.WriteLine("║                 BATTLE RESULT                 ║");
+                Console.WriteLine("╚═══════════════════════════════════════════════╝");
+            });
+
+            WithColor(ConsoleColor.DarkCyan, () =>
+            {
+                foreach (var log in battleLog)
+                {
+                    Console.WriteLine($"→ {log}");
+                }
+            });
             Console.WriteLine();
-            
-            if (userWins >= 2)
-                PrintVictoryMessage(nickname);
-            else if (aiWins >= 2)
-                PrintDefeatMessage(nickname);
-            else
-                PrintDrawMessage(nickname);
+
+            // Print final battle outcome message
+            if (userWins >= 2) {
+                PrintBattleMessage(nickname, BattleOutcome.Victory);
+            } else if (aiWins >= 2) {
+                PrintBattleMessage(nickname, BattleOutcome.Defeat);
+            }else {
+                PrintBattleMessage(nickname, BattleOutcome.Draw);
+            }
             
             Console.WriteLine("Press any key to view your updated stats...");
             Console.ReadKey(true);
@@ -239,50 +205,47 @@ namespace Rock_Paper_Scissors_Console_Game
             return userWins >= 2;
         }
 
-        private static string GetRoundWinner(Weapons user, Weapons ai)
+        /*
+         * Determine the outcome of a single round based on user's and AI's weapons
+         */
+        private static BattleOutcome GetRoundWinner(Weapons user, Weapons ai)
         {
-            if (user == ai) return "draw";
+            if (user == ai) return BattleOutcome.Draw;
             if ((user == Weapons.Rock && ai == Weapons.Scissors) ||
                 (user == Weapons.Scissors && ai == Weapons.Paper) ||
-                (user == Weapons.Paper && ai == Weapons.Rock)) return "user";
-            return "ai";
+                (user == Weapons.Paper && ai == Weapons.Rock)) return BattleOutcome.Victory;
+            return BattleOutcome.Defeat;
         }
 
-        private static void PrintWeapon(string owner, Weapons weapon)
+        /*
+         * Display ASCII art representation of the chosen weapon for a given player
+         */
+        private static void PrintWeapon(Player player, Weapons weapon)
         {
-            ConsoleColor boxColor = owner == "You" ? ConsoleColor.Green : ConsoleColor.Red;
-            string weaponTitle = $"{owner} chose: {weapon.ToString().ToUpper()}";
+            ConsoleColor boxColor = player == Player.User ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
+            string playerText = player == Player.User ? "You" : player == Player.AI ? "AI" : player.ToString();
+            string weaponTitle = $"{playerText} chose: {weapon.ToString().ToUpper()}";
             string[] art = GetAsciiArt(weapon);
 
             int width = Math.Max(weaponTitle.Length, 30);
             string border = new string('=', width);
 
-            Console.ForegroundColor = boxColor;
-            Console.WriteLine($"\n+{border}+");
-            Console.WriteLine($"| {weaponTitle.PadRight(width)} |");
-            Console.WriteLine($"+{border}+");
-            Console.ResetColor();
-
-            foreach (string line in art)
+            WithColor(boxColor, () =>
             {
-                switch (weapon)
+                Console.WriteLine($"\n+{border}+");
+                Console.WriteLine($"| {weaponTitle.PadRight(width)} |");
+                Console.WriteLine($"+{border}+");
+                
+                foreach (string line in art)
                 {
-                    case Weapons.Rock:
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
-                        break;
-                    case Weapons.Paper:
-                        Console.ForegroundColor = ConsoleColor.White;
-                        break;
-                    case Weapons.Scissors:
-                        Console.ForegroundColor = ConsoleColor.Magenta;
-                        break;
+                    Console.WriteLine("  " + line);
                 }
-                Console.WriteLine("  " + line);
-            }
-            Console.ResetColor();
-
+            });
         }
 
+        /*
+         * Return ASCII art lines for the specified weapon
+         */
         private static string[] GetAsciiArt(Weapons weapon)
         {
             switch(weapon)
@@ -329,43 +292,173 @@ namespace Rock_Paper_Scissors_Console_Game
                 }
             };
         }
-
-        private static void PrintVictoryMessage(string nickname)
+        
+        /*
+         * Show current stats screen
+         */
+        private static void ShowStats(string nickname, int age, int rounds, int wins)
         {
-            string[] messages =
-            {
-                $"Well done, {nickname}! You're a true champion!",
-                $"Victory is yours, {nickname}! Keep it up!",
-                $"Fantastic win, {nickname}! You're unstoppable!"
-            };
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(messages[new Random().Next(messages.Length)]);
-            Console.ResetColor();
+            Console.Clear();
+            Console.WriteLine("+==============================+");
+            Console.WriteLine("|         STATISTICS           |");
+            Console.WriteLine("+==============================+");
+            Console.WriteLine($"| Nickname: {nickname}");
+            Console.WriteLine($"| Age:      {age}");
+            Console.WriteLine($"| Battles:  {rounds}");
+            Console.WriteLine($"| Wins:     {wins}");
+            Console.WriteLine("+==============================+\n");
         }
 
-        private static void PrintDefeatMessage(string nickname)
+        /*
+         * Print a randomized victory, defeat, or draw message based on battle outcome
+         */
+        private static void PrintBattleMessage(string nickname, BattleOutcome outcome)
         {
-            string[] messages =
+            string[] messages;
+            ConsoleColor color;
+
+            switch (outcome)
             {
-                $"Don't worry, {nickname}, you'll get them next time!",
-                $"Keep going, {nickname}! Every loss is a lesson.",
-                $"Chin up, {nickname}! Great effort!"
-            };
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(messages[new Random().Next(messages.Length)]);
+                case BattleOutcome.Victory:
+                {
+                    messages = new[]
+                    {
+                        $"Well done, {nickname}! You're a true champion!",
+                        $"Victory is yours, {nickname}! Keep it up!",
+                        $"Fantastic win, {nickname}! You're unstoppable!"
+                    };
+                    color = ConsoleColor.DarkGreen;
+                    break;
+                }
+                case BattleOutcome.Defeat:
+                {
+                    messages = new[]
+                    {
+                        $"Don't worry, {nickname}, you'll get them next time!",
+                        $"Keep going, {nickname}! Every loss is a lesson.",
+                        $"Chin up, {nickname}! Great effort!"
+                    };
+                    color = ConsoleColor.DarkRed;
+                    break;
+                }
+                case BattleOutcome.Draw:
+                default:
+                {
+                    messages = new[]
+                    {
+                        $"Well fought, {nickname}! It’s a draw.",
+                        $"No winner this time, {nickname}. You held your ground!",
+                        $"Neither side won, {nickname}. Let’s call it a tie!"
+                    };
+                    color = ConsoleColor.DarkYellow;
+                    break;
+                }
+            }
+
+            WithColor(color, () => Console.WriteLine("\n" + messages[new Random().Next(messages.Length)]));
             Console.ResetColor();
         }
-    
-        private static void PrintDrawMessage(string nickname)
+        
+        /*
+         * Display a goodbye message when user exits the game
+         */
+        private static void SayGoodbye(string nickname)
         {
+            Console.Clear();
             string[] messages = {
-                $"Well fought, {nickname}! It’s a draw.",
-                $"No winner this time, {nickname}. You held your ground!",
-                $"Neither side won, {nickname}. Let’s call it a tie!"
+                $"Take care, {nickname}! See you next time!",
+                $"Goodbye, {nickname}! Come back stronger!",
+                $"Thanks for playing, {nickname}! Until next battle!"
             };
 
             Random rand = new Random();
-            Console.WriteLine("\n" + messages[rand.Next(messages.Length)]);
+            string message = messages[rand.Next(messages.Length)];
+
+            string border = new string('=', message.Length + 4);
+
+            WithColor(ConsoleColor.DarkCyan, () =>
+            {
+                Console.Clear();
+                Console.WriteLine($"\n{border}");
+                Console.WriteLine($"= {message} =");
+                Console.WriteLine($"{border}\n");
+            });
+        }
+        
+        /*
+         * Temporarily sets the console foreground color, runs the provided action, then resets the color.
+         */
+        private static void WithColor(ConsoleColor color, Action action)
+        {
+            Console.ForegroundColor = color;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                Console.ResetColor();
+            }
+        }
+        
+        /*
+         * Arrow-key menu system
+         */
+        private static int ShowMenu(string prompt, string[] options)
+        {
+            int selected = 0;
+            ConsoleKey key;
+            
+            int cursorTop = Console.CursorTop;
+            Console.CursorVisible = false;
+
+            if (!string.IsNullOrWhiteSpace(prompt))
+            {
+                WithColor(ConsoleColor.DarkCyan, () => Console.WriteLine(prompt));
+                cursorTop = Console.CursorTop;
+            }
+
+            do
+            {
+                Console.SetCursorPosition(0, cursorTop);
+
+                for (int i = 0; i < options.Length; i++)
+                {
+                    Console.ForegroundColor = (i == selected) ? ConsoleColor.Cyan : ConsoleColor.Gray;
+                    Console.WriteLine($"{(i == selected ? "> " : "  ")}{options[i]}".PadRight(Console.WindowWidth - 1));
+                }
+                Console.ResetColor();
+                
+                Console.SetCursorPosition(0, cursorTop);
+
+                key = Console.ReadKey(true).Key;
+
+                if (key == ConsoleKey.UpArrow)
+                {
+                    selected = (selected == 0) ? options.Length - 1 : selected - 1;
+                } else if (key == ConsoleKey.DownArrow)
+                {
+                    selected = (selected + 1) % options.Length;
+                }
+
+            } while (key != ConsoleKey.Enter);
+
+            Console.SetCursorPosition(0, cursorTop + options.Length);
+            Console.CursorVisible = true;
+            return selected;
+        }
+        
+        /*
+         * Display a styled red error box with a message
+         */
+        private static void ShowError(string message)
+        {
+            WithColor(ConsoleColor.Red, () =>
+            {
+                Console.WriteLine("\n+----------------------- ERROR -----------------------+");
+                Console.WriteLine($"| {message.PadRight(49)} |");
+                Console.WriteLine("+-----------------------------------------------------+");
+            });
         }
     
     }

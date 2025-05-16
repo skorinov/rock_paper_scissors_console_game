@@ -13,7 +13,7 @@ namespace Rock_Paper_Scissors_Console_Game
         }
         
         // Player enum
-        enum Player
+        private enum Player
         {
             User,
             AI,
@@ -26,7 +26,7 @@ namespace Rock_Paper_Scissors_Console_Game
             Scissors
         }
         // Enum for possible outcomes of a round/battle
-        enum BattleOutcome
+        private enum BattleOutcome
         {
             Victory,
             Defeat,
@@ -60,10 +60,13 @@ namespace Rock_Paper_Scissors_Console_Game
 
                 WithColor(ConsoleColor.DarkCyan, () =>
                 {
-                    Console.WriteLine("Welcome to the Rock-Paper-Scissors Arena!\n");
+                    if (totalRounds == 0)
+                    {
+                        PrintBoxedText("Welcome to the Rock-Paper-Scissors Arena!", 0);
+                    }
                     // Show user statistics for current session
                     ShowStats(nickname, age, totalRounds, totalWins);
-                    Console.WriteLine($"Are you ready to {(totalRounds > 0 ? "next" : "")} fight? Use arrow keys to choose.\n");
+                    Console.WriteLine($"Are you ready{(totalRounds > 0 ? " for the next " : " to ")}fight? (use arrow keys to choose):\n");
                 });
                 int readyIndex = ShowMenu(string.Empty, new[] { FightOptionsEnum.Yes.ToString(), FightOptionsEnum.No.ToString() });
 
@@ -91,9 +94,7 @@ namespace Rock_Paper_Scissors_Console_Game
                 Console.Clear();
                 WithColor(ConsoleColor.DarkCyan, () =>
                 {
-                    Console.WriteLine("+-----------------------------+");
-                    Console.WriteLine("|      Nickname Required      |");
-                    Console.WriteLine("+-----------------------------+");
+                    PrintBoxedText("Nickname Required");
                     Console.Write("Enter your nickname: ");
                 });
 
@@ -119,9 +120,7 @@ namespace Rock_Paper_Scissors_Console_Game
                 Console.Clear();
                 WithColor(ConsoleColor.DarkCyan, () =>
                 {
-                    Console.WriteLine("+-------------------------------+");
-                    Console.WriteLine("|    Age Verification Required  |");
-                    Console.WriteLine("+-------------------------------+");
+                    PrintBoxedText("Age Verification Required");
                     Console.Write("Enter your age: ");
                 });
 
@@ -174,11 +173,11 @@ namespace Rock_Paper_Scissors_Console_Game
                 Console.ReadKey(true);
             }
             Console.Clear();
+            BattleOutcome outcome = userWins >= 2 ? BattleOutcome.Victory : aiWins >= 2 ? BattleOutcome.Defeat : BattleOutcome.Draw;
+
             WithColor(ConsoleColor.DarkCyan, () =>
             {
-                Console.WriteLine("╔═══════════════════════════════════════════════╗");
-                Console.WriteLine("║                 BATTLE RESULT                 ║");
-                Console.WriteLine("╚═══════════════════════════════════════════════╝");
+                PrintBoxedText($"BATTLE RESULT: {outcome.ToString().ToUpper()}");
             });
 
             WithColor(ConsoleColor.DarkCyan, () =>
@@ -191,13 +190,7 @@ namespace Rock_Paper_Scissors_Console_Game
             Console.WriteLine();
 
             // Print final battle outcome message
-            if (userWins >= 2) {
-                PrintBattleMessage(nickname, BattleOutcome.Victory);
-            } else if (aiWins >= 2) {
-                PrintBattleMessage(nickname, BattleOutcome.Defeat);
-            }else {
-                PrintBattleMessage(nickname, BattleOutcome.Draw);
-            }
+            PrintBattleMessage(nickname, outcome);
             
             Console.WriteLine("Press any key to view your updated stats...");
             Console.ReadKey(true);
@@ -298,15 +291,23 @@ namespace Rock_Paper_Scissors_Console_Game
          */
         private static void ShowStats(string nickname, int age, int rounds, int wins)
         {
-            Console.Clear();
-            Console.WriteLine("+==============================+");
-            Console.WriteLine("|         STATISTICS           |");
-            Console.WriteLine("+==============================+");
+            int boxWidth = 40;
+            string border = new string('=', boxWidth);
+            string title = "= STATISTICS =";
+
+            // Center title inside the box width
+            int padding = (boxWidth - title.Length) / 2;
+            string centeredTitle = new string(' ', padding) + title;
+
+            Console.WriteLine($"\n{border}");
+            Console.WriteLine(centeredTitle);
+            Console.WriteLine($"{border}\n");
+
             Console.WriteLine($"| Nickname: {nickname}");
             Console.WriteLine($"| Age:      {age}");
             Console.WriteLine($"| Battles:  {rounds}");
             Console.WriteLine($"| Wins:     {wins}");
-            Console.WriteLine("+==============================+\n");
+            Console.WriteLine(new string('=', boxWidth) + "\n");
         }
 
         /*
@@ -325,7 +326,9 @@ namespace Rock_Paper_Scissors_Console_Game
                     {
                         $"Well done, {nickname}! You're a true champion!",
                         $"Victory is yours, {nickname}! Keep it up!",
-                        $"Fantastic win, {nickname}! You're unstoppable!"
+                        $"Fantastic win, {nickname}! You're unstoppable!",
+                        $"Amazing skills, {nickname}! The Rock-Paper-Scissors crown belongs to you!",
+                        $"Brilliant strategy, {nickname}! You've outsmarted the AI opponent!"
                     };
                     color = ConsoleColor.DarkGreen;
                     break;
@@ -336,7 +339,9 @@ namespace Rock_Paper_Scissors_Console_Game
                     {
                         $"Don't worry, {nickname}, you'll get them next time!",
                         $"Keep going, {nickname}! Every loss is a lesson.",
-                        $"Chin up, {nickname}! Great effort!"
+                        $"Chin up, {nickname}! Great effort!",
+                        $"The best warriors learn from defeat, {nickname}. You'll come back stronger!",
+                        $"That was just bad luck, {nickname}! Your Rock-Paper-Scissors skills are still impressive!"
                     };
                     color = ConsoleColor.DarkRed;
                     break;
@@ -346,9 +351,11 @@ namespace Rock_Paper_Scissors_Console_Game
                 {
                     messages = new[]
                     {
-                        $"Well fought, {nickname}! It’s a draw.",
+                        $"Well fought, {nickname}! It's a draw.",
                         $"No winner this time, {nickname}. You held your ground!",
-                        $"Neither side won, {nickname}. Let’s call it a tie!"
+                        $"Neither side won, {nickname}. Let's call it a tie!",
+                        $"A perfect balance of skill, {nickname}! This match ends in equilibrium.",
+                        $"Great minds think alike, {nickname}! This draw shows you're evenly matched with the AI!"
                     };
                     color = ConsoleColor.DarkYellow;
                     break;
@@ -365,10 +372,13 @@ namespace Rock_Paper_Scissors_Console_Game
         private static void SayGoodbye(string nickname)
         {
             Console.Clear();
-            string[] messages = {
+            string[] messages = 
+            {
                 $"Take care, {nickname}! See you next time!",
                 $"Goodbye, {nickname}! Come back stronger!",
-                $"Thanks for playing, {nickname}! Until next battle!"
+                $"Thanks for playing, {nickname}! Until next battle!",
+                $"The arena will await your return, {nickname}! Rest well, warrior!",
+                $"Even champions need a break, {nickname}! The Rock-Paper-Scissors challenge will be here when you return!"
             };
 
             Random rand = new Random();
@@ -383,22 +393,6 @@ namespace Rock_Paper_Scissors_Console_Game
                 Console.WriteLine($"= {message} =");
                 Console.WriteLine($"{border}\n");
             });
-        }
-        
-        /*
-         * Temporarily sets the console foreground color, runs the provided action, then resets the color.
-         */
-        private static void WithColor(ConsoleColor color, Action action)
-        {
-            Console.ForegroundColor = color;
-            try
-            {
-                action();
-            }
-            finally
-            {
-                Console.ResetColor();
-            }
         }
         
         /*
@@ -459,6 +453,45 @@ namespace Rock_Paper_Scissors_Console_Game
                 Console.WriteLine($"| {message.PadRight(49)} |");
                 Console.WriteLine("+-----------------------------------------------------+");
             });
+        }
+        
+        /*
+         * Temporarily sets the console foreground color, runs the provided action, then resets the color.
+         */
+        private static void WithColor(ConsoleColor color, Action action)
+        {
+            Console.ForegroundColor = color;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                Console.ResetColor();
+            }
+        }
+        
+        /*
+         * Displays a given text string inside a styled box with borders,
+         * aligned from the left with minimum width.
+         */
+        private static void PrintBoxedText(string text, int indent = 1, int minWidth = 40)
+        {
+            int contentWidth = Math.Max(minWidth, text.Length + 4);
+            int padding = (contentWidth - text.Length) / 2;
+
+            string top = "╔" + new string('═', contentWidth) + "╗";
+            string middle = "║" + new string(' ', padding) + text + new string(' ', contentWidth - text.Length - padding) + "║";
+            string bottom = "╚" + new string('═', contentWidth) + "╝";
+
+            Console.SetCursorPosition(indent, Console.CursorTop);
+            Console.WriteLine(top);
+
+            Console.SetCursorPosition(indent, Console.CursorTop);
+            Console.WriteLine(middle);
+
+            Console.SetCursorPosition(indent, Console.CursorTop);
+            Console.WriteLine(bottom);
         }
     
     }
